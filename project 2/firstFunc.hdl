@@ -1,0 +1,31 @@
+
+CHIP firstFunc {
+    IN  
+        x[16], 
+        y[16],
+        zx,
+        nx,
+        zy,
+        ny,
+        f,
+        no;
+    OUT 
+        out[16],
+        zr,
+        ng;
+    PARTS:
+    And16(a=x, b=false, out=andX);
+    Mux16(a=x, b=andX, sel=zx, out=firstFuncResultX);
+    Not16(in=firstFuncResultX, out=notFirstFuncResultX);
+    Mux16(a=firstFuncResultX, b=notFirstFuncResultX, sel=nx, out=secondFuncResultX);
+    And16(a=y, b=false, out=andY);
+    Mux16(a=y, b=andY, sel=zy, out=firstFuncResultY);
+    Not16(in=firstFuncResultY, out=notFirstFuncResultY);
+    Mux16(a=firstFuncResultY, b=notFirstFuncResultY, sel=ny, out=secondFuncResultY);
+    Add16(a=secondFuncResultX, b=secondFuncResultY, out=fifthFuncAddXY);
+    And16(a=secondFuncResultX, b=secondFuncResultY, out=fifthFuncAndXY);
+    Mux16(a=fifthFuncAndXY, b=fifthFuncAddXY, sel=f, out=fifthFuncResult);
+    Not16(in=fifthFuncResult, out=sixthFuncResult);
+    Mux16(a=fifthFuncResult, b=sixthFuncResult, sel=no, out[15]=MSBOfComputation, out=out);
+    And(a=MSBOfComputation, b=true, out=ng);
+}
