@@ -43,9 +43,13 @@ D;JNE
 0;JMP
 
 
+
+
+
 (BLACKEN_THE_SCREEN)
 
-//blacken the current "word"
+//blacken the current "word" - go to the address stored in addressOfCurrentRegisterInScreen 
+//and assign a decimal -1 to it, or make everything black in binary basically
 @addressOfCurrentRegisterInScreen
 A=M
 M=-1
@@ -60,23 +64,13 @@ M=D+1
 //(i.e. we completely iterated over the screen) jump back to listening for the keyboard input
 @addressOfCurrentRegisterInScreen
 D=M
-@KEYBOARD
+@KBD
 D=D-A
 @KEYBOARD_LISTENING_LOOP
-D; JEQ
+D;JEQ
 
 @BLACKEN_THE_SCREEN
-
-
-
-
-
-
-
-
-
-
-
+0;JMP
 
 
 //put the value of the pressed on or not pressed key in the @currentlyPressedKey
