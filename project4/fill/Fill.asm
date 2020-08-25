@@ -13,9 +13,15 @@
 
 // Put your code here.
 
-//continously listen for any pressed key
+
+//create a constant screenSize with the width * height of the screen to refer to it later
+@8192
+D=A
+@screenSize
+M=D
 
 
+(KEYBOARD_LISTENING_LOOP)
 
 //initialize the addressOfCurrentRegisterInScreen var to the address of the start of the screen in RAM
 @SCREEN
@@ -23,15 +29,7 @@ D=A
 @addressOfCurrentRegisterInScreen
 M=D
 
-//create a constant screenSize to refer to it later
-@8192
-D=A
-@screenSize
-M=D
 
-
-
-(KEYBOARD_LISTENING_LOOP)
 //access the word that's respondible for listening to keyboard input and put it into currentlyPressedKey variable
 @KBD
 D=M
@@ -39,9 +37,11 @@ D=M
 @BLACKEN_THE_SCREEN
 D;JNE
 
+@WHITEN_THE_SCREEN
+D;JEQ
+
 @KEYBOARD_LISTENING_LOOP
 0;JMP
-
 
 
 
@@ -73,10 +73,31 @@ D;JEQ
 0;JMP
 
 
-//put the value of the pressed on or not pressed key in the @currentlyPressedKey
-// if the value of @currentlyPressedKey != 0 blacken the screen
 
-// else whiten the screen
+
+(WHITEN_THE_SCREEN)
+@addressOfCurrentRegisterInScreen
+A=M
+M=0
+
+//increment the addressOfCurrentRegisterInScreen
+@addressOfCurrentRegisterInScreen
+D=M
+@addressOfCurrentRegisterInScreen
+M=D+1
+
+//if the addressOfCurrentRegisterInScreen minus the KEYBOARD constant equals 0 
+//(i.e. we completely iterated over the screen) jump back to listening for the keyboard input
+@addressOfCurrentRegisterInScreen
+D=M
+@KBD
+D=D-A
+@KEYBOARD_LISTENING_LOOP
+D;JEQ
+
+
+@WHITEN_THE_SCREEN
+0;JMP
 
 
 
