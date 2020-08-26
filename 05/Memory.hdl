@@ -32,7 +32,8 @@ CHIP Memory {
     DMux(in=load, sel=address[14], a=loadBitToRam, b=loadBitToScreen);
     RAM16K(in=in, load=loadBitToRam, address=address[0..13], out=outFromRam);
     Screen(in=in, load=loadBitToScreen, address=address[0..12], out=outFromScreen);
-    Mux16(a=outFromRam, b=outFromScreen, sel=address[14], out=out);
-    Keyboard(out=out);
+    Mux16(a=outFromRam, b=outFromScreen, sel=address[14], out=outFromRamAndScreen);
+    Keyboard(out=outFromKeyboard);
+    Or16(a=outFromRamAndScreen, b=outFromKeyboard, out=out);
 
 }
