@@ -29,14 +29,16 @@ CHIP Memory {
     PARTS:
     // Put your code here:
 
-    //*****IMPORTANT***** for some reason at cycle 7 we're reading the value of RAM[0] instead of Screen[0]
+    //we have to instantly output 0 in case the eval is pressed in line 39 (ie perform combinatorial logic ) in other words find a way to bypasss the DFF
+
     DMux(in=load, sel=address[14], a=loadBitToRam, b=loadBitToScreen);
-    DFF(in=address[14], out=MSBFromPrevCycle);
+    And(a=address[14], b=load, out=outToDFF);
+    DFF(in=outToDFF, out=prevCycleMSB);
+    Or(a=prevCycleMSB,b=address[14], out=MSBToMux);
     RAM16K(in=in, load=loadBitToRam, address=address[0..13], out=outFromRam);
     Screen(in=in, load=loadBitToScreen, address=address[0..12], out=outFromScreen);
-    Mux16(a=outFromRam, b=outFromScreen, sel=MSBFromPrevCycle, out=out);
-    //Mux16(a=outFromRam, b=outFromScreen, sel=MSBFromPrevCycle, out=outFromRamAndScreen);
-    //Keyboard(out=outFromKeyboard);
-    //Or16(a=outFromRamAndScreen, b=outFromKeyboard, out=out);
+    Mux16(a=outFromRam, b=outFromScreen, sel=MSBToMux, out=outFromRamAndScreen);
+    Keyboard(out=outFromKeyboard);
+    Or16(a=outFromRamAndScreen, b=outFromKeyboard, out=out);
 
 }
