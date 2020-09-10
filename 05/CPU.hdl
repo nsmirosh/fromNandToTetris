@@ -39,5 +39,28 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+
+
+    //we feed the first MUX the instruction and the and the output of the ALU 
+
+    Mux16(a=outM ,b=instruction ,sel= ,out=);
+
+    // the A register is fed directly from MUX
+    ARegister(in= ,load= ,out=ARegOut);
+
+    //this MUX decides whether we take the input of the A register or 
+    // the M register based on the "a" bit of the C instruction
+    Mux16(a=ARegOut ,b=inM ,sel= ,out=AorMvalue);
+
+    DRegister(in=outM ,load= ,out=DRegOut);
+    
+    PC(in= ,load= ,inc= ,reset= ,out= );
+
+    // we feed the ALU the outputs of the D and A | M registers
+    ALU(x=DRegOut ,y=AorMvalue ,zx= ,nx= ,zy= ,ny= ,f= ,no= ,out=outM ,zr= ,ng= );
+
+
+
+
+
 }
