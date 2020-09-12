@@ -41,23 +41,40 @@ CHIP CPU {
     PARTS:
 
 
+    //if it's a C instruction - send the correct bits everywhere
+    // if it's an A instruction - negate everything - since we just need to send this to the A register
+
+    // ****** how can we set writeM to controlBits[4]? **********
+    And16(a=instruction[15], b=instruction, out=controlBits, out[4]=writeM);
+
+    // So that the Mux takes the right instruction to pass forward
+    // we pass it the negated MSB of the current instruction
+
+    Not(in=instruction[15], out=negatedMSB);
+
     //we feed the first MUX the instruction and the and the output of the ALU 
 
-    Mux16(a=outM ,b=instruction ,sel= ,out=);
+    Mux16(a=outM ,b=instruction ,sel=negatedMSB ,out=ARegIn);
 
     // the A register is fed directly from MUX
-    ARegister(in= ,load= ,out=ARegOut);
+    // whether the register will be "open for business" depends on the MSB of the dest bits of the c instruction
+
+    ARegister(in=ARegIn ,load=controlBits[5] ,out=ARegOut);
 
     //this MUX decides whether we take the input of the A register or 
     // the M register based on the "a" bit of the C instruction
-    Mux16(a=ARegOut ,b=inM ,sel= ,out=AorMvalue);
+    Mux16(a=ARegOut ,b=inM ,sel=controlBits[12] ,out=AorMvalue);
 
-    DRegister(in=outM ,load= ,out=DRegOut);
-    
-    PC(in= ,load= ,inc= ,reset= ,out= );
 
-    // we feed the ALU the outputs of the D and A | M registers
-    ALU(x=DRegOut ,y=AorMvalue ,zx= ,nx= ,zy= ,ny= ,f= ,no= ,out=outM ,zr= ,ng= );
+    // whether we load the D register or not depends on the LSB bit of the dest bits of the C instruction
+    DRegister(in=outM ,load=controlBits[3] ,out=DRegOut);
+
+    // we feed the ALU the outputs of the D and A | M registers and the control bits of the C instruction
+    ALU(x=DRegOut ,y=AorMvalue ,zx=controlBits[11] ,nx=controlBits[10] ,zy=controlBits[9] ,ny=controlBits[8] ,f=controlBits[7] ,no=controlBits[6] ,out=outM ,zr=isALUoutZero,ng=isALUoutNegative);
+
+
+     //the load bit and the inc bit comes from the output of the ALU and the JMP logic
+    PC(in= ,load= ,inc= ,reset= ,out=pc);
 
 
 
