@@ -49,35 +49,41 @@ CHIP CPU {
 
     // So that the Mux takes the right instruction to pass forward
     // we pass it the negated MSB of the current instruction
-
     Not(in=instruction[15], out=negatedMSB);
 
     //we feed the first MUX the instruction and the and the output of the ALU 
-
     Mux16(a=outM ,b=instruction ,sel=negatedMSB ,out=ARegIn);
 
     // the A register is fed directly from MUX
     // whether the register will be "open for business" depends on the MSB of the dest bits of the c instruction
-
     ARegister(in=ARegIn ,load=controlBits[5] ,out=ARegOut);
 
     //this MUX decides whether we take the input of the A register or 
     // the M register based on the "a" bit of the C instruction
     Mux16(a=ARegOut ,b=inM ,sel=controlBits[12] ,out=AorMvalue);
 
-
     // whether we load the D register or not depends on the LSB bit of the dest bits of the C instruction
     DRegister(in=outM ,load=controlBits[3] ,out=DRegOut);
 
     // we feed the ALU the outputs of the D and A | M registers and the control bits of the C instruction
-    ALU(x=DRegOut ,y=AorMvalue ,zx=controlBits[11] ,nx=controlBits[10] ,zy=controlBits[9] ,ny=controlBits[8] ,f=controlBits[7] ,no=controlBits[6] ,out=outM ,zr=isALUoutZero,ng=isALUoutNegative);
+    ALU(x=DRegOut ,y=AorMvalue ,zx=controlBits[11] ,nx=controlBits[10] ,zy=controlBits[9] ,ny=controlBits[8] ,f=controlBits[7] ,no=controlBits[6] ,out=outM ,zr=zrOut,ng=ngOut);
 
+    //we compare the output of the ALU against the jump bits of the instruction and if at least one of them matches - then the load bit of PC is 1
+    And(a=instruction[2], b=ngOut, out=firstJMPbitCompare);
+    And(a=instruction[1], b=zrOut, out=secondJMPbitCompare);
 
-     //the load bit and the inc bit comes from the output of the ALU and the JMP logic
-    PC(in= ,load= ,inc= ,reset= ,out=pc);
+    //if ngOut == 0 and zrOut == 0 then ALU output is positive
+    Or(a=ngOut,b=zrOut,out=isNegativeOrZero);
+    Not(in=isNegativeOrZero,out=isALUoutPositive);
 
+    And(a=instruction[0], b=isALUoutPositive, out=thirdJMPbitCompare);
 
+    Or(a=firstJMPbitCompare, b=secondJMPbitCompare, out=firstJmpComparisonResult);
+    Or(a=firstJmpComparisonResult, b=thirdJMPbitCompare, out=shouldLoadPC);
 
+    //if load == 1 then PC == A, else increment counter
+    Not(in=shouldLoadPC, out=shouldIncPC);
 
-
+    //the load bit and the inc bit comes from the output of the ALU and the JMP logic
+    PC(in=ARegOut ,load=shouldLoadPC ,inc=shouldIncPC ,reset=reset ,out=pc);
 }
