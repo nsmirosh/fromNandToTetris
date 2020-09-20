@@ -1,0 +1,83 @@
+  
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+
+
+
+    //if it's a C instruction - send the correct bits everywhere
+    // if it's an A instruction - negate everything (send 0's as control bits) - since we just need to send this to the A register
+    // we do this by taking the MSB of the instruction (op-code) and comparing that against the instruction passed 
+    And16(a=false, b=instruction, out=zeros);
+
+    Mux16(a=zeros, b=instruction, sel=instruction[15],
+    out[3]=writeM,
+    out[4]=shouldLoadDReg,
+    out[5]=cInstrLoadA,
+    out[6]=noEnable,
+    out[7]=fEnable,
+    out[8]=nyEnable,
+    out[9]=zyEnable,
+    out[10]=nxEnable, 
+    out[11]=zxEnable, 
+    out[12]=cInstrABit
+    );
+
+    // So that the Mux takes the right instruction to pass forward
+    // we pass it the negated MSB of the current instruction
+    Not(in=instruction[15], out=negatedMSB); 
+
+    //we feed the first MUX the instruction and the and the output of the ALU 
+    Mux16(a=ALUout ,b=instruction ,sel=negatedMSB ,out=ARegIn);
+
+    // the A register is fed directly from MUX
+    // whether the register will be "open for business" depends on the MSB of the dest bits of the c instruction
+    // also the A register is always loaded if it's an A instruction
+
+    Or(a=negatedMSB, b=cInstrLoadA, out=shouldLoadAReg);
+    ARegister(in=ARegIn, load=shouldLoadAReg, out=ARegOut, out[0..14] = addressM);
+
+    //this MUX decides whether we take the input of the A register or 
+    // the M register based on the "a" bit of the C instruction
+    Mux16(a=ARegOut ,b=inM ,sel=cInstrABit ,out=AorMvalue);
+
+    // whether we load the D register or not depends on the LSB bit of the dest bits of the C instruction
+    DRegister(in=ALUout,load=shouldLoadDReg, out=DRegOut);
+
+    // we feed the ALU the outputs of the D and A | M registers and the control bits of the C instruction
+    ALU(x=DRegOut ,y=AorMvalue, zx=zxEnable, nx=nxEnable, zy=zyEnable, ny=nyEnable, f=fEnable, no=noEnable, out=outM, out=ALUout, zr=zrOut,ng=ngOut);
+
+    //we compare the output of the ALU against the jump bits of the instruction and if at least one of them matches - then the load bit of PC is 1
+    And(a=instruction[2], b=ngOut, out=j1bit);
+    And(a=instruction[1], b=zrOut, out=j2bit);
+
+    //if ngOut == 0 and zrOut == 0 then ALU output is positive
+    Or(a=ngOut,b=zrOut,out=isNegativeOrZero);
+    Not(in=isNegativeOrZero,out=isALUoutPositive);
+
+    And(a=instruction[0], b=isALUoutPositive, out=j3bit);
+
+    Or(a=j1bit, b=j2bit, out=j1ORj2);
+    Or(a=j1ORj2, b=j3bit, out=shouldLoadPC);
+
+    //if it's an A instruction - do NOT load the PC at all, i.e. ignore what the ALU is outputting
+    And(a=shouldLoadPC, b=instruction[15], out=shouldActuallyLoadPc);
+
+    //if load == 1 then PC == A, else increment counter
+    Not(in=shouldActuallyLoadPc, out=shouldIncPC);
+
+    //the load bit and the inc bit comes from the output of the ALU and the JMP logic
+    PC(in=ARegOut ,load=shouldActuallyLoadPc ,inc=shouldIncPC ,reset=reset ,out[0..14]=pc);
+    }
