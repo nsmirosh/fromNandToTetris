@@ -1,3 +1,16 @@
-reading from a file;: 20 bytes
-in the middle of a  file;: 25 bytes
-ending  file;: 13 bytes
+0 
+balls 
+1 
+balls 
+1010 
+balls 
+1 
+balls 
+1100 
+balls 
+0 
+balls 
+10 
+balls 
+1110 
+balls 

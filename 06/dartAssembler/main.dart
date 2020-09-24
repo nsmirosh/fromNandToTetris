@@ -10,7 +10,7 @@ main() {
       .transform(utf8.decoder) // Decode bytes to UTF-8.
       .transform(LineSplitter()) // Convert stream to individual lines.
       .listen((String line) {
-    fileToWriteTo.write('$line: ${line.length} bytes\n');
+    fileToWriteTo.write('${_processLine(line)} \n');
   }, onDone: () {
     fileToWriteTo.close();
     print('File is now closed.');
@@ -18,61 +18,73 @@ main() {
     print(e.toString());
     fileToWriteTo.close();
   });
-
-  final compInstructionMap = {
-    //a = 0
-    "0":   "0101010",
-    "1":   "0111111",
-    "-1":  "0111010",
-    "D":   "0001100",
-    "A":   "0110000",
-    "!D":  "0001101",
-    "!A":  "0110001",
-    "-D":  "0001111",
-    "-A":  "0110011",
-    "D+1": "0011111",
-    "A+1": "0110111",
-    "D-1": "0001110",
-    "A-1": "0110010",
-    "D+A": "0000010",
-    "D-A": "0010011",
-    "A-D": "0000111",
-    "D&A": "0000000",
-    "D|A": "0010101",
-
-    //a = 1
-    "M":   "1110000",
-    "!M":  "1110001",
-    "-M":  "1110011",
-    "M+1": "1110111",
-    "M-1": "1110010",
-    "D+M": "1000010",
-    "D-M": "1010011",
-    "M-D": "1000111",
-    "D&M": "1000000",
-    "D|M": "1010101",
-  };
-
-
-  final jmpInstructionMap = {
-    null:   "000",
-    "JGT":  "001",
-    "JEQ":  "010",
-    "JGE":  "011",
-    "JLT":  "100",
-    "JNE":  "101",
-    "JLE":  "110",
-    "JMP":  "111",
-  };
-
-  final dstMap = {
-    null:  "000",
-    "M":   "001",
-    "D":   "010",
-    "MD":  "011",
-    "A":   "100",
-    "AM":  "101",
-    "AD":  "110",
-    "AMD": "111",
-  };
 }
+
+String _processLine(String line) {
+  var instructionInBinary = "balls";
+  // if the first character is @ it's an A instruction
+  // we convert it to a 16 bit binary number then
+  if (line[0] == "@") {
+    //pad the binaryString with additional zeros to make it a 16 bit binary
+    instructionInBinary = int.parse(line.substring(1)).toRadixString(2);
+    instructionInBinary.padLeft(16 - instructionInBinary.length, '0');
+  }
+  return instructionInBinary;
+}
+
+const compInstructionMap = {
+  //a = 0
+  "0":   "0101010",
+  "1":   "0111111",
+  "-1":  "0111010",
+  "D":   "0001100",
+  "A":   "0110000",
+  "!D":  "0001101",
+  "!A":  "0110001",
+  "-D":  "0001111",
+  "-A":  "0110011",
+  "D+1": "0011111",
+  "A+1": "0110111",
+  "D-1": "0001110",
+  "A-1": "0110010",
+  "D+A": "0000010",
+  "D-A": "0010011",
+  "A-D": "0000111",
+  "D&A": "0000000",
+  "D|A": "0010101",
+
+  //a = 1
+  "M":   "1110000",
+  "!M":  "1110001",
+  "-M":  "1110011",
+  "M+1": "1110111",
+  "M-1": "1110010",
+  "D+M": "1000010",
+  "D-M": "1010011",
+  "M-D": "1000111",
+  "D&M": "1000000",
+  "D|M": "1010101",
+};
+
+
+const jmpInstructionMap = {
+  null:   "000",
+  "JGT":  "001",
+  "JEQ":  "010",
+  "JGE":  "011",
+  "JLT":  "100",
+  "JNE":  "101",
+  "JLE":  "110",
+  "JMP":  "111",
+};
+
+const dstMap = {
+  null:  "000",
+  "M":   "001",
+  "D":   "010",
+  "MD":  "011",
+  "A":   "100",
+  "AM":  "101",
+  "AD":  "110",
+  "AMD": "111",
+};
