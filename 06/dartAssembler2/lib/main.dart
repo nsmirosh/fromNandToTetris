@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-var currentParsePosition = 0;
+const wordWidthInBits = 16;
 
 main() {
   final fileToReadFrom = new File('readFile.txt');
@@ -12,7 +12,7 @@ main() {
       .transform(utf8.decoder) // Decode bytes to UTF-8.
       .transform(LineSplitter()) // Convert stream to individual lines.
       .listen((String line) {
-    fileToWriteTo.write('${_processLine(line)} \n');
+    fileToWriteTo.write('${processLine(line)}\n');
   }, onDone: () {
     fileToWriteTo.close();
     print('File is now closed.');
@@ -22,47 +22,46 @@ main() {
   });
 }
 
-String _processLine(String line) {
-  var instructionInBinary = "balls";
-  // if the first character is @ it's an A instruction
-  // we convert it to a 16 bit binary number then
-  if (line[0] == "@") {
-    //pad the binaryString with additional zeros to make it a 16 bit binary
-    instructionInBinary = int.parse(line.substring(1)).toRadixString(2);
-    instructionInBinary.padLeft(16 - instructionInBinary.length, '0');
-  } else {
-    //else it's a C instruction so we can add the first 111 straight away
-    // the format of the C instr = 111accccccdddjjj.
-    instructionInBinary = "111";
-
-    final destBits = getDestBits(line);
-    final compBits = getComputationBits(line, posToStartParsingFrom: currentParsePosition);
+String processLine(String line) {
+  if (isAinstr(line)) {
+    return proccessAInstr(line);
   }
+  return processCInstr(line);
+}
 
-  return instructionInBinary;
+bool isAinstr(line) => line[0] == "@";
+
+String proccessAInstr(String line) {
+  var aInstrInBinary = int.parse(line.substring(1)).toRadixString(2);
+  //pad the binaryString with additional zeros to make it a 16 bit binary
+  return aInstrInBinary.padLeft(wordWidthInBits, '0');
+}
+
+String processCInstr(String line) {
+  var cInstrInBinary = "111";
+  var destBits = "000";
+  var currentParsePosition = 0;
+  if (line.contains("=")) {
+    destBits = getDestBits(line);
+    currentParsePosition = line.indexOf('=') + 1;
+  }
+  final compBits = getComputationBits(line, currentParsePosition);
+
+  var jumpBits = "000";
+  if (line.contains(";")) {
+    jumpBits = getJumpBits(line);
+  }
+  cInstrInBinary += compBits + destBits + jumpBits;
+  return cInstrInBinary;
 }
 
 getDestBits(String line) {
-  // if the 2nd or 3rd char is '=' it means that there are going to be destination bits
-  // if there is none - that means we can map the computation instruction straight away
-  var destBits = "000";
-  if (line.contains("=")) {
-    if (line[1] == '=') {
-      destBits = dstMap[line.substring(0, 1)];
-      currentParsePosition = 2;
-    } else if (line[2] == '=') {
-      destBits = dstMap[line.substring(0, 2)];
-      currentParsePosition = 3;
-    } else if (line[3] == '=') {
-      destBits = dstMap[line.substring(0, 3)];
-      currentParsePosition = 4;
-    }
-  }
-
-  return destBits;
+  final destInstr = line.substring(0, line.indexOf('='));
+  return dstMap[destInstr];
 }
 
-getComputationBits(String line,/* for testing purposes */ {int posToStartParsingFrom} ) {
+getComputationBits(String line,
+    /* for testing purposes */ [int posToStartParsingFrom]) {
   var compBits = "";
   var compInstructionAndForward = line.substring(posToStartParsingFrom);
   // the comp instruction end either at the end of the line
@@ -71,14 +70,17 @@ getComputationBits(String line,/* for testing purposes */ {int posToStartParsing
     //if there's a semicolon we're passing either some constant or a D register
     // hence only 1 char passing to the compInstructionMap is enough
     compBits = compInstructionMap[compInstructionAndForward[0]];
-  }
-  else {
+  } else {
     // if there's no semicolon we can be sure that there isn't going to be any jump
     // so we can just take the rest of the instruction and match it against the compInstructionMap
     compBits = compInstructionMap[compInstructionAndForward];
   }
-  currentParsePosition += compBits.length;
   return compBits;
+}
+
+getJumpBits(String line) {
+  var jumpInstruction = line.substring(line.indexOf(';') + 1);
+  return jmpInstructionMap[jumpInstruction];
 }
 
 const compInstructionMap = {
@@ -116,7 +118,6 @@ const compInstructionMap = {
 };
 
 const jmpInstructionMap = {
-  null: "000",
   "JGT": "001",
   "JEQ": "010",
   "JGE": "011",
@@ -127,7 +128,6 @@ const jmpInstructionMap = {
 };
 
 const dstMap = {
-  null: "000",
   "M": "001",
   "D": "010",
   "MD": "011",
