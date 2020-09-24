@@ -36,6 +36,7 @@ String _processLine(String line) {
     instructionInBinary = "111";
 
     final destBits = getDestBits(line);
+    final compBits = getComputationBits(line, posToStartParsingFrom: currentParsePosition);
   }
 
   return instructionInBinary;
@@ -61,22 +62,22 @@ getDestBits(String line) {
   return destBits;
 }
 
-getComputationBits(String line) {
+getComputationBits(String line,/* for testing purposes */ {int posToStartParsingFrom} ) {
   var compBits = "";
-  var compInstructionAndForward = line.substring(currentParsePosition);
+  var compInstructionAndForward = line.substring(posToStartParsingFrom);
   // the comp instruction end either at the end of the line
   // or before the ";" symbol
   if (compInstructionAndForward.contains(";")) {
-    // we usually store everything in the D register after evaluation
-    // so we can be sure that comp bits here will be equal to D
-    //TODO make sure I'm not wrong here
-    compBits = "0001100";
+    //if there's a semicolon we're passing either some constant or a D register
+    // hence only 1 char passing to the compInstructionMap is enough
+    compBits = compInstructionMap[compInstructionAndForward[0]];
   }
   else {
     // if there's no semicolon we can be sure that there isn't going to be any jump
     // so we can just take the rest of the instruction and match it against the compInstructionMap
     compBits = compInstructionMap[compInstructionAndForward];
   }
+  currentParsePosition += compBits.length;
   return compBits;
 }
 
