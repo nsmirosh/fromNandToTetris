@@ -29,7 +29,30 @@ String _processLine(String line) {
     instructionInBinary = int.parse(line.substring(1)).toRadixString(2);
     instructionInBinary.padLeft(16 - instructionInBinary.length, '0');
   }
+  //else it's a C instruction so we can add the first 111 straight away
+  // the format of the C instr = 111accccccdddjjj.
+  instructionInBinary = "111";
+
+  final destBits = _getDestBits(line);
+
+
   return instructionInBinary;
+}
+
+_getDestBits(String line) {
+  // if the 2nd or 3rd char is '=' it means that there are going to be destination bits
+  // if there is none - that means we can map the computation instruction straight away
+  var destBits = "000";
+  if (line[1] == '=') {
+    destBits = dstMap[line.substring(0, 1)];
+  }
+  else if (line[2] == '=') {
+    destBits = dstMap[line.substring(0, 2)];
+  }
+  else if (line[3] == '=') {
+    destBits = dstMap[line.substring(0, 3)];
+  }
+  return destBits;
 }
 
 const compInstructionMap = {
