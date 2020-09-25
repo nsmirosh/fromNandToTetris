@@ -31,10 +31,18 @@ void main() {
   });
 
   test('remove comments and whitespace from the line', () {
-    expect(purifyTheLine("// This file is part of www.nand2tetris.org"), null);
-    expect(purifyTheLine("0;JMP    // infinite loop"), "0;JMP");
-    expect(purifyTheLine("M=D//big balls"), "M=D");
-    expect(purifyTheLine("M=D"), "M=D");
-    expect(purifyTheLine("            \n"), null);
+    expect(removeUneccessaryStuff("// This file is part of www.nand2tetris.org"), null);
+    expect(removeUneccessaryStuff("0;JMP    // infinite loop"), "0;JMP");
+    expect(removeUneccessaryStuff("M=D//big balls"), "M=D");
+    expect(removeUneccessaryStuff("    M=D"), "M=D");
+    expect(removeUneccessaryStuff("A=D"), "A=D");
+    expect(removeUneccessaryStuff("D=D-M     "), "D=D-M");
+    expect(removeUneccessaryStuff("            \n"), null);
+  });
+
+  test('is symbol', () {
+    expect(isSymbol("@R0"), true);
+    expect(isSymbol("@1"), false);
+    expect(isSymbol("0;JMP"), false);
   });
 }

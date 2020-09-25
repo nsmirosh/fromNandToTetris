@@ -4,6 +4,7 @@ import 'dart:io';
 import 'c_instruction_constants.dart';
 
 const wordWidthInBits = 16;
+var nextRAMPos = 16;
 
 main() {
   final fileToReadFrom = new File('readFile.asm');
@@ -14,7 +15,7 @@ main() {
       .transform(utf8.decoder) // Decode bytes to UTF-8.
       .transform(LineSplitter()) // Convert stream to individual lines.
       .listen((String line) {
-    String pureInstruction = purifyTheLine(line);
+    String pureInstruction = removeUneccessaryStuff(line);
     if (pureInstruction != null) {
       fileToWriteTo.write(processLine(pureInstruction) + "\n");
     }
@@ -27,7 +28,7 @@ main() {
   });
 }
 
-String purifyTheLine(String line) {
+String removeUneccessaryStuff(String line) {
   if (line.contains("//")) {
     String lineWithoutStartingWhiteSpace = line.trimLeft();
     int commentStartPos = lineWithoutStartingWhiteSpace.indexOf("//");
@@ -43,7 +44,34 @@ String purifyTheLine(String line) {
     //it's just whitespace so remove it
     return null;
   }
-  return line;
+  return line.trim();
+}
+
+String preProcessTheInstruction(String instruction) {
+  /*
+  1. put the "unknown" symbols into the symbol table along with their value
+  2. delete the jump labels from the code
+  3. subsitute the symbol from the symbol table
+   */
+
+
+}
+
+insertSymbolIntoTable(String instruction) {
+  if (isSymbol(instruction)) {
+    if(!symbolTable.containsKey(instruction)) {
+
+      //if it's a var - insert it into with the next vacant memory position in RAM
+      //we can tell that it's a var if we don't encounter the "(" character for it anywhere
+      symbolTable[instruction] = nextRAMPos;
+      nextRAMPos++;
+
+
+
+      //save it is a var and if we encounter the "(" change it's type to jump and assign it the jump position
+
+    }
+  }
 }
 
 String processLine(String line) {
@@ -51,17 +79,13 @@ String processLine(String line) {
   Perform two passes, the first one is going to:
   1. Strip everything to leave only the instructions and the symbols
   2. put the "unknown" symbols into the symbol table along with their value
-  3. delete the "unknown" symbol table references
+  3. delete the "unknown" symbol table references from the code
 
   second one:
   1. Translate the symbol/comment/whitespace-free code into binary (basically what it's doing right now
-  
+
 
    */
-
-
-
-
 
   if (isAinstr(line)) {
     return proccessAInstr(line);
@@ -70,6 +94,10 @@ String processLine(String line) {
 }
 
 bool isAinstr(line) => line[0] == "@";
+
+bool isSymbol(line) => !RegExp(r'(\d+)').hasMatch(line[1]) && isAinstr(line);
+
+bool isLabel(line) => line[0] == "(";
 
 String proccessAInstr(String line) {
   var aInstrInBinary = int.parse(line.substring(1)).toRadixString(2);
@@ -123,7 +151,7 @@ getJumpBits(String line) {
   return jmpInstructionMap[jumpInstruction];
 }
 
-final symbolTable = {
+final Map<String, int>symbolTable = {
   "SP": 0,
   "LCL": 1,
   "ARG": 2,
