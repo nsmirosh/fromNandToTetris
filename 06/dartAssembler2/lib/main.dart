@@ -14,7 +14,6 @@ main() {
       .transform(utf8.decoder) // Decode bytes to UTF-8.
       .transform(LineSplitter()) // Convert stream to individual lines.
       .listen((String line) {
-
     String pureInstruction = purifyTheLine(line);
     if (pureInstruction != null) {
       fileToWriteTo.write(processLine(pureInstruction) + "\n");
@@ -27,6 +26,7 @@ main() {
     fileToWriteTo.close();
   });
 }
+
 String purifyTheLine(String line) {
   if (line.contains("//")) {
     String lineWithoutStartingWhiteSpace = line.trimLeft();
@@ -35,21 +35,34 @@ String purifyTheLine(String line) {
       // there's an instruction before the comment so extract that and pass it on.
       // there could be something else, but we don't handle it.
       return lineWithoutStartingWhiteSpace.substring(0, commentStartPos).trim();
-    }
-    else {
+    } else {
       // the line starts from a comment so might as well just remove it
       return null;
     }
-  }
-  else if (line.trim().length == 0){
+  } else if (line.trim().length == 0) {
     //it's just whitespace so remove it
     return null;
   }
   return line;
 }
 
-
 String processLine(String line) {
+  /*
+  Perform two passes, the first one is going to:
+  1. Strip everything to leave only the instructions and the symbols
+  2. put the "unknown" symbols into the symbol table along with their value
+  3. delete the "unknown" symbol table references
+
+  second one:
+  1. Translate the symbol/comment/whitespace-free code into binary (basically what it's doing right now
+  
+
+   */
+
+
+
+
+
   if (isAinstr(line)) {
     return proccessAInstr(line);
   }
@@ -57,9 +70,6 @@ String processLine(String line) {
 }
 
 bool isAinstr(line) => line[0] == "@";
-
-
-
 
 String proccessAInstr(String line) {
   var aInstrInBinary = int.parse(line.substring(1)).toRadixString(2);
@@ -112,7 +122,6 @@ getJumpBits(String line) {
   var jumpInstruction = line.substring(line.indexOf(';') + 1);
   return jmpInstructionMap[jumpInstruction];
 }
-
 
 final symbolTable = {
   "SP": 0,
