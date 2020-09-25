@@ -6,7 +6,7 @@ import 'c_instruction_constants.dart';
 const wordWidthInBits = 16;
 
 main() {
-  final fileToReadFrom = new File('readFile.txt');
+  final fileToReadFrom = new File('readFile.asm');
   Stream<List<int>> inputStream = fileToReadFrom.openRead();
 
   final fileToWriteTo = File('writeFile.hack').openWrite();
@@ -17,7 +17,7 @@ main() {
 
     String pureInstruction = purifyTheLine(line);
     if (pureInstruction != null) {
-      fileToWriteTo.write(pureInstruction);
+      fileToWriteTo.write(processLine(pureInstruction) + "\n");
     }
   }, onDone: () {
     fileToWriteTo.close();
@@ -29,7 +29,7 @@ main() {
 }
 String purifyTheLine(String line) {
   if (line.contains("//")) {
-    String lineWithoutStartingWhiteSpace = line.trim();
+    String lineWithoutStartingWhiteSpace = line.trimLeft();
     int commentStartPos = lineWithoutStartingWhiteSpace.indexOf("//");
     if (commentStartPos != 0) {
       // there's an instruction before the comment so extract that and pass it on.
