@@ -1,18 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'c_instruction_constants.dart';
+
 const wordWidthInBits = 16;
 
 main() {
   final fileToReadFrom = new File('readFile.txt');
   Stream<List<int>> inputStream = fileToReadFrom.openRead();
 
-  final fileToWriteTo = File('writeFile.txt').openWrite();
+  final fileToWriteTo = File('writeFile.hack').openWrite();
   inputStream
       .transform(utf8.decoder) // Decode bytes to UTF-8.
       .transform(LineSplitter()) // Convert stream to individual lines.
       .listen((String line) {
-    fileToWriteTo.write('${processLine(line)}\n');
+
+    String pureInstruction = purifyTheLine(line);
+    if (pureInstruction != null) {
+      fileToWriteTo.write(pureInstruction);
+    }
   }, onDone: () {
     fileToWriteTo.close();
     print('File is now closed.');
@@ -21,6 +27,27 @@ main() {
     fileToWriteTo.close();
   });
 }
+String purifyTheLine(String line) {
+  if (line.contains("//")) {
+    String lineWithoutStartingWhiteSpace = line.trim();
+    int commentStartPos = lineWithoutStartingWhiteSpace.indexOf("//");
+    if (commentStartPos != 0) {
+      // there's an instruction before the comment so extract that and pass it on.
+      // there could be something else, but we don't handle it.
+      return lineWithoutStartingWhiteSpace.substring(0, commentStartPos).trim();
+    }
+    else {
+      // the line starts from a comment so might as well just remove it
+      return null;
+    }
+  }
+  else if (line.trim().length == 0){
+    //it's just whitespace so remove it
+    return null;
+  }
+  return line;
+}
+
 
 String processLine(String line) {
   if (isAinstr(line)) {
@@ -30,6 +57,9 @@ String processLine(String line) {
 }
 
 bool isAinstr(line) => line[0] == "@";
+
+
+
 
 String proccessAInstr(String line) {
   var aInstrInBinary = int.parse(line.substring(1)).toRadixString(2);
@@ -83,56 +113,29 @@ getJumpBits(String line) {
   return jmpInstructionMap[jumpInstruction];
 }
 
-const compInstructionMap = {
-  //a = 0
-  "0": "0101010",
-  "1": "0111111",
-  "-1": "0111010",
-  "D": "0001100",
-  "A": "0110000",
-  "!D": "0001101",
-  "!A": "0110001",
-  "-D": "0001111",
-  "-A": "0110011",
-  "D+1": "0011111",
-  "A+1": "0110111",
-  "D-1": "0001110",
-  "A-1": "0110010",
-  "D+A": "0000010",
-  "D-A": "0010011",
-  "A-D": "0000111",
-  "D&A": "0000000",
-  "D|A": "0010101",
 
-  //a = 1
-  "M": "1110000",
-  "!M": "1110001",
-  "-M": "1110011",
-  "M+1": "1110111",
-  "M-1": "1110010",
-  "D+M": "1000010",
-  "D-M": "1010011",
-  "M-D": "1000111",
-  "D&M": "1000000",
-  "D|M": "1010101",
-};
-
-const jmpInstructionMap = {
-  "JGT": "001",
-  "JEQ": "010",
-  "JGE": "011",
-  "JLT": "100",
-  "JNE": "101",
-  "JLE": "110",
-  "JMP": "111",
-};
-
-const dstMap = {
-  "M": "001",
-  "D": "010",
-  "MD": "011",
-  "A": "100",
-  "AM": "101",
-  "AD": "110",
-  "AMD": "111",
+final symbolTable = {
+  "SP": 0,
+  "LCL": 1,
+  "ARG": 2,
+  "THIS": 3,
+  "THAT": 4,
+  "R0": 0,
+  "R1": 1,
+  "R2": 2,
+  "R3": 3,
+  "R4": 4,
+  "R5": 5,
+  "R6": 6,
+  "R7": 7,
+  "R8": 8,
+  "R9": 9,
+  "R10": 10,
+  "R11": 11,
+  "R12": 12,
+  "R13": 13,
+  "R14": 14,
+  "R15": 15,
+  "SCREEN": 16384,
+  "KBD": 24576,
 };

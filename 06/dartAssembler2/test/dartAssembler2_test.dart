@@ -29,4 +29,12 @@ void main() {
   test('process the whole line', () {
     expect(processLine("MD=M-1"), "111" + "1110010" + "011" + "000");
   });
+
+  test('remove comments and whitespace from the line', () {
+    expect(purifyTheLine("// This file is part of www.nand2tetris.org"), null);
+    expect(purifyTheLine("0;JMP    // infinite loop"), "0;JMP");
+    expect(purifyTheLine("M=D//big balls"), "M=D");
+    expect(purifyTheLine("M=D"), "M=D");
+    expect(purifyTheLine("            \n"), null);
+  });
 }
