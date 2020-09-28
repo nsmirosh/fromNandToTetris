@@ -1,4 +1,6 @@
 import 'package:dartAssembler2/main.dart';
+import 'package:dartAssembler2/parser.dart';
+
 import 'package:test/test.dart';
 
 void main() {
@@ -31,27 +33,15 @@ void main() {
   });
 
   test('remove comments and whitespace from the line', () {
-    expect(removeUneccessaryStuff("// This file is part of www.nand2tetris.org"), null);
-    expect(removeUneccessaryStuff("0;JMP    // infinite loop"), "0;JMP");
-    expect(removeUneccessaryStuff("M=D//big balls"), "M=D");
-    expect(removeUneccessaryStuff("    M=D"), "M=D");
-    expect(removeUneccessaryStuff("A=D"), "A=D");
-    expect(removeUneccessaryStuff("D=D-M     "), "D=D-M");
-    expect(removeUneccessaryStuff("            \n"), null);
-    expect(removeUneccessaryStuff("(OUTPUT_FIRST)\n"), "(OUTPUT_FIRST)");
+    expect(removeCommentsAndWhiteSpace("// This file is part of www.nand2tetris.org"), null);
+    expect(removeCommentsAndWhiteSpace("0;JMP    // infinite loop"), "0;JMP");
+    expect(removeCommentsAndWhiteSpace("M=D//big balls"), "M=D");
+    expect(removeCommentsAndWhiteSpace("    M=D"), "M=D");
+    expect(removeCommentsAndWhiteSpace("A=D"), "A=D");
+    expect(removeCommentsAndWhiteSpace("D=D-M     "), "D=D-M");
+    expect(removeCommentsAndWhiteSpace("            \n"), null);
+    expect(removeCommentsAndWhiteSpace("(OUTPUT_FIRST)\n"), "(OUTPUT_FIRST)");
 
   });
 
-  test('is symbol', () {
-    expect(isSymbol("@R0"), true);
-    expect(isSymbol("@1"), false);
-    expect(isSymbol("0;JMP"), false);
-  });
-
-
-  test('is symbol', () {
-    expect(addToSymbolTableIfLabel("@stuff"), true);
-    expect(isSymbol("@1"), false);
-    expect(isSymbol("0;JMP"), false);
-  });
 }

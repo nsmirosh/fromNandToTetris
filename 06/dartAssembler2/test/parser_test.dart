@@ -4,17 +4,16 @@ import 'package:test/test.dart';
 
 class MockParser extends Mock implements Parser {}
 
+
 void main() {
   test('check that dest bits are parsed correctly', ()
   {
-    var parser = MockParser();
-    when(parser.isAinstr("balls")).thenReturn(true);
+    // var actualParser = Parser(mockMyBalls);
+
     // when(parser.proccessAInstr("balls")).thenReturn("001");
-    parser.processLine("balls");
-    parser.isAinstr("balls");
+    actualParser.convertToAssembly("@1111");
     // expect(parser.proccessAInstr("balls"), "001");
-    verify(parser.processLine("balls"));
-    verify(parser.isAinstr("balls"));
+    // verify(actualParser.proccessAInstr("@1111"));
 
   });
 }
