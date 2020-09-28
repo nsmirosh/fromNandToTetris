@@ -6,6 +6,11 @@ import 'c_instruction_constants.dart';
 const wordWidthInBits = 16;
 var nextRAMPos = 16;
 
+var variables = [];
+var labels = [];
+var lineNo = 0;
+
+
 main() {
   final fileToReadFrom = new File('readFile.asm');
   Stream<List<int>> inputStream = fileToReadFrom.openRead();
@@ -18,6 +23,7 @@ main() {
     String pureInstruction = removeUneccessaryStuff(line);
     if (pureInstruction != null) {
       fileToWriteTo.write(processLine(pureInstruction) + "\n");
+      lineNo++;
     }
   }, onDone: () {
     fileToWriteTo.close();
@@ -53,26 +59,28 @@ String preProcessTheInstruction(String instruction) {
   2. delete the jump labels from the code
   3. subsitute the symbol from the symbol table
    */
-
-
 }
 
-insertSymbolIntoTable(String instruction) {
-  if (isSymbol(instruction)) {
-    if(!symbolTable.containsKey(instruction)) {
+addToVarsIfVar(String instruction) {
+  if (isSymbol(instruction) && !isSymbolInTable(instruction)) {
+    variables.add(instruction);
+  }
+}
 
-      //if it's a var - insert it into with the next vacant memory position in RAM
-      //we can tell that it's a var if we don't encounter the "(" character for it anywhere
-      symbolTable[instruction] = nextRAMPos;
-      nextRAMPos++;
-
-
-
-      //save it is a var and if we encounter the "(" change it's type to jump and assign it the jump position
-
+addToSymbolTableIfLabel(String instruction) {
+  if (isLabel(instruction)) {
+    // if we encounter a label - put it in the symbolTable + 1 since we're going to
+    // remove it before we start converting to binary
+    symbolTable[instruction] = lineNo + 1;
+    //remove the label from the vars that were mistakingly added there
+    if (variables.contains(instruction)) {
+      variables.remove(instruction);
     }
   }
 }
+
+bool isSymbolInTable(String instruction) =>
+    symbolTable.containsKey(instruction);
 
 String processLine(String line) {
   /*
@@ -151,7 +159,7 @@ getJumpBits(String line) {
   return jmpInstructionMap[jumpInstruction];
 }
 
-final Map<String, int>symbolTable = {
+final Map<String, int> symbolTable = {
   "SP": 0,
   "LCL": 1,
   "ARG": 2,

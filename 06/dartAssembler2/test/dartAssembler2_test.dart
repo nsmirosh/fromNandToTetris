@@ -38,10 +38,19 @@ void main() {
     expect(removeUneccessaryStuff("A=D"), "A=D");
     expect(removeUneccessaryStuff("D=D-M     "), "D=D-M");
     expect(removeUneccessaryStuff("            \n"), null);
+    expect(removeUneccessaryStuff("(OUTPUT_FIRST)\n"), "(OUTPUT_FIRST)");
+
   });
 
   test('is symbol', () {
     expect(isSymbol("@R0"), true);
+    expect(isSymbol("@1"), false);
+    expect(isSymbol("0;JMP"), false);
+  });
+
+
+  test('is symbol', () {
+    expect(addToSymbolTableIfLabel("@stuff"), true);
     expect(isSymbol("@1"), false);
     expect(isSymbol("0;JMP"), false);
   });
