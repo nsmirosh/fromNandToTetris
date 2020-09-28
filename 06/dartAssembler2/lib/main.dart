@@ -14,22 +14,25 @@ main() {
 
   final symbolTableBuilder = SymbolTableBuilder();
 
-  String wholeFileNoCommentsOrWhitespace;
+  String wholeFileNoCommentsOrWhitespace = "";
 
   inputStream
       .transform(utf8.decoder)
       .transform(LineSplitter())
       .listen((String line) {
-
     String pureText = removeCommentsAndWhiteSpace(line);
-    wholeFileNoCommentsOrWhitespace += "$pureText\n";
+    if (pureText != null) {
+      wholeFileNoCommentsOrWhitespace += "$pureText\n";
+    }
   }, onDone: () {
-    pureAssembly.close();
+    print(wholeFileNoCommentsOrWhitespace);
     print('File is now closed.');
   }, onError: (e) {
     print(e.toString());
-    pureAssembly.close();
   });
+
+
+
 
 
   // parser.convertToAssembly(pureInstruction) + "\n"

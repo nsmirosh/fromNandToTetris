@@ -28,9 +28,9 @@ class SymbolTableBuilder {
 
   Map<String, int> buildSymbolTable(String instr) {
 
-    if (isLabel(instr)) {
+   /* if (isLabel(instr)) {
       symbolTable[instr] =
-    }
+    }*/
 
 
   }
@@ -45,7 +45,7 @@ class SymbolTableBuilder {
     if (isLabel(instruction)) {
       // if we encounter a label - put it in the symbolTable + 1 since we're going to
       // remove it before we start converting to binary
-      symbolTable[instruction] = lineNo + 1;
+      // symbolTable[instruction] = lineNo + 1;
       //remove the label from the vars that were mistakingly added there
       if (variables.contains(instruction)) {
         variables.remove(instruction);
