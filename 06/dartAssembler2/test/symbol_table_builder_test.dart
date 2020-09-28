@@ -18,8 +18,20 @@ D=M
     expect(extractLabelName("(OUTPUT_FIRST)"), "OUTPUT_FIRST");
   });
 
-  test('build symbol table', () {
+  test('build symbol table inserts a single label at position 4', () {
     expect(buildSymbolTable(instructions)["@OUTPUT_FIRST"], 4);
+  });
+
+
+  test('handle symbol does not insert into vars ', () {
+    expect(buildSymbolTable(instructions)["@OUTPUT_FIRST"], 4);
+  });
+
+  test('build symbol table inserts a single label at position 4, removes it from a list of variable', () {
+    vars = ["@OUTPUT_FIRST", "@someVar"];
+    buildSymbolTable(instructions);
+    expect(vars.length, 3);
+    expect(vars[0], "@someVar");
   });
 
 /*

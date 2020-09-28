@@ -19,80 +19,66 @@ once finished parsing the whole instruction list (reach the end of file or last 
 
  */
 
-import 'dart:collection';
 import 'dart:convert';
 
 var nextFreeRAMPos = 16;
-var variables = [];
-
-class SymbolTableBuilder {
-  addToVarsIfVar(String instr) {
-    if (isLabel(instr) && !isSymbolInTable(instr)) {
-      variables.add(instr);
-    }
-  }
-
-  addToSymbolTableIfLabel(String instruction) {
-    if (isLabel(instruction)) {
-      // if we encounter a label - put it in the symbolTable + 1 since we're going to
-      // remove it before we start converting to binary
-      // symbolTable[instruction] = lineNo + 1;
-      //remove the label from the vars that were mistakingly added there
-      if (variables.contains(instruction)) {
-        variables.remove(instruction);
-      }
-    }
-  }
-
-  bool isSymbolInTable(String instruction) =>
-      symbolTable.containsKey(instruction);
-
-  // bool isSymbol(line) => !RegExp(r'(\d+)').hasMatch(line[1]) ;
-
-}
+var vars = [];
+int lineNo = 0;
 
 Map<String, int> buildSymbolTable(String instr) {
-  int lineNo = 0;
 
   LineSplitter ls = LineSplitter();
   List<String> lines = ls.convert(instr);
 
   lines.forEach((line) {
-    if (isLabel(line)) {
-      symbolTable["@${extractLabelName(line)}"] = lineNo;
-    }
+    if (isLabel(line)) handleLabel(line);
+    else if (isSymbol(line)) handleSymbol(line);
     lineNo++;
   });
 
   return symbolTable;
 }
 
+void handleLabel(String line) {
+  final symbol = "@${extractLabelName(line)}";
+  symbolTable[symbol] = lineNo; //insert symbol regardless
+  vars.remove(symbol); //remove from the vars - if it's not there it's not going to do anything
+}
+
+void handleSymbol(String line) {
+  if (symbolTable.containsKey(line) || vars.contains(line)) {
+    return;
+  }
+  vars.add(line);
+}
+
 bool isLabel(line) => line[0] == "(";
+bool isSymbol(line) => line[0] == "@";
 
 Map<String, int> symbolTable = {
-  "SP": 0,
-  "LCL": 1,
-  "ARG": 2,
-  "THIS": 3,
-  "THAT": 4,
-  "R0": 0,
-  "R1": 1,
-  "R2": 2,
-  "R3": 3,
-  "R4": 4,
-  "R5": 5,
-  "R6": 6,
-  "R7": 7,
-  "R8": 8,
-  "R9": 9,
-  "R10": 10,
-  "R11": 11,
-  "R12": 12,
-  "R13": 13,
-  "R14": 14,
-  "R15": 15,
-  "SCREEN": 16384,
-  "KBD": 24576,
+  "@SP": 0,
+  "@LCL": 1,
+  "@ARG": 2,
+  "@THIS": 3,
+  "@THAT": 4,
+  "@R0": 0,
+  "@R1": 1,
+  "@R2": 2,
+  "@R3": 3,
+  "@R4": 4,
+  "@R5": 5,
+  "@R6": 6,
+  "@R7": 7,
+  "@R8": 8,
+  "@R9": 9,
+  "@R10": 10,
+  "@R11": 11,
+  "@R12": 12,
+  "@R13": 13,
+  "@R14": 14,
+  "@R15": 15,
+  "@SCREEN": 16384,
+  "@KBD": 24576,
 };
 
 extractLabelName(String label) {

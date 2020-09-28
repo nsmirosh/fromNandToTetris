@@ -28,7 +28,6 @@ class Parser {
 
 }
 
-
 bool isAinstr(line) => line[0] == "@";
 
 String proccessAInstr(String line) {
