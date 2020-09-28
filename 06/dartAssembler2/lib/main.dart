@@ -12,8 +12,6 @@ main() {
   Stream<List<int>> inputStream = assemblyWithSymbols.openRead();
   final pureAssembly = File('PureAssembly.asm').openWrite();
 
-  final symbolTableBuilder = SymbolTableBuilder();
-
   String wholeFileNoCommentsOrWhitespace = "";
 
   inputStream
@@ -26,6 +24,7 @@ main() {
     }
   }, onDone: () {
     print(wholeFileNoCommentsOrWhitespace);
+    buildSymbolTable(wholeFileNoCommentsOrWhitespace);
     print('File is now closed.');
   }, onError: (e) {
     print(e.toString());
