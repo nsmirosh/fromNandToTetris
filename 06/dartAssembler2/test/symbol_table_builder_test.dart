@@ -47,15 +47,14 @@ D=M
 @OUTPUT_D
 0;JMP
 (OUTPUT_FIRST)
-@R0             
+@R0
 D=M
 (OUTPUT_D)
 @R2
 M=D
 (INFINITE_LOOP)
 @INFINITE_LOOP
-0;JMP  
-  ''';
+0;JMP''';
 
 void main() {
   group("description", () {
@@ -197,17 +196,12 @@ void main() {
     test(
         'build symbol table with longer instructions but no variables',
             () {
-          vars = ["@someVar", "@someBalls"];
           final result = buildSymbolTable(instructions1);
 
           //vars aren't touched since there are no vars
-          expect(vars.length, 3);
-          expect(vars[0], "@someVar");
-          expect(vars[1], "@someBalls");
-          expect(vars[2], "@nothing");
+          expect(vars.length, 0);
 
-
-          expect(result["@OUTPUT_FIRST"], 9);
+          expect(result["@OUTPUT_FIRST"], 10);
         });
   });
 }

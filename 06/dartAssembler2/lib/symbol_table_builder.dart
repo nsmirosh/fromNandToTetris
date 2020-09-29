@@ -52,12 +52,12 @@ Map<String, int> symbolTable = {
 };
 
 Map<String, int> buildSymbolTable(String instr) {
-
   LineSplitter ls = LineSplitter();
   List<String> lines = ls.convert(instr);
 
   lines.forEach((line) {
-    if (isLabel(line)) handleLabel(line);
+    if (isLabel(line))
+      handleLabel(line);
     else if (isSymbol(line)) handleSymbol(line);
     lineNo++;
   });
@@ -68,11 +68,15 @@ Map<String, int> buildSymbolTable(String instr) {
 void handleLabel(String line) {
   final symbol = "@${extractLabelName(line)}";
   symbolTable[symbol] = lineNo; //insert symbol regardless
-  final removed = vars.remove(symbol); //remove from the vars - if it's not there it's not going to do anything
+  final removed = vars.remove(
+      symbol); //remove from the vars - if it's not there it's not going to do anything
   print("$symbol removed == $removed");
 }
 
 void handleSymbol(String line) {
+  print("symbolTable.containsKey($line) == ${symbolTable.containsKey(line)}");
+  print("vars.contains($line) == ${vars.contains(line)}");
+
   if (symbolTable.containsKey(line) || vars.contains(line)) {
     return;
   }
