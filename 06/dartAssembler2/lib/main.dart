@@ -26,6 +26,7 @@ main() {
     print(wholeFileNoCommentsOrWhitespace);
     buildSymbolTable(wholeFileNoCommentsOrWhitespace);
     print('File is now closed.');
+
   }, onError: (e) {
     print(e.toString());
   });
