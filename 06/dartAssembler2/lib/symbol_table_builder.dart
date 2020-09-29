@@ -25,7 +25,6 @@ var nextFreeRAMPos = 16;
 var vars = [];
 int lineNo = 0;
 
-
 Map<String, int> symbolTable = {
   "@SP": 0,
   "@LCL": 1,
@@ -52,9 +51,7 @@ Map<String, int> symbolTable = {
   "@KBD": 24576,
 };
 
-Map<String, int> buildSymbolTable(String instr, [optionalSymbolTable]) {
-
-  if(optionalSymbolTable != null) symbolTable = optionalSymbolTable; //testing purposes
+Map<String, int> buildSymbolTable(String instr) {
 
   LineSplitter ls = LineSplitter();
   List<String> lines = ls.convert(instr);
@@ -71,7 +68,8 @@ Map<String, int> buildSymbolTable(String instr, [optionalSymbolTable]) {
 void handleLabel(String line) {
   final symbol = "@${extractLabelName(line)}";
   symbolTable[symbol] = lineNo; //insert symbol regardless
-  vars.remove(symbol); //remove from the vars - if it's not there it's not going to do anything
+  final removed = vars.remove(symbol); //remove from the vars - if it's not there it's not going to do anything
+  print("$symbol removed == $removed");
 }
 
 void handleSymbol(String line) {
