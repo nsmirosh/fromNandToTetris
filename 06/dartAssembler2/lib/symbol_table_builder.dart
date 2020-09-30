@@ -51,10 +51,27 @@ Map<String, int> symbolTable = {
   "@KBD": 24576,
 };
 
-Map<String, int> buildSymbolTable(String instr) {
+List<String> buildAssemblyWithoutSymbols(String wholeFile) {
   LineSplitter ls = LineSplitter();
-  List<String> lines = ls.convert(instr);
+  List<String> lines = ls.convert(wholeFile);
+  buildSymbolTable(lines);
 
+  final List<String> assemblyWithoutSymbols = [];
+
+  lines.forEach((line) {
+    if (isLabel(line))
+      return; // just don't write the line if it's a label
+    else if (isSymbol(line))
+      assemblyWithoutSymbols
+          .add("@${symbolTable[line]}\n"); // convert the symbol to plain number
+    else
+      assemblyWithoutSymbols.add(line);
+  });
+
+  return assemblyWithoutSymbols;
+}
+
+Map<String, int> buildSymbolTable(List<String> lines) {
   lines.forEach((line) {
     if (isLabel(line))
       handleLabel(line);
@@ -62,21 +79,19 @@ Map<String, int> buildSymbolTable(String instr) {
     lineNo++;
   });
 
+  vars.asMap().forEach((index, value) => symbolTable[value] =
+      nextFreeRAMPos + index); //add the vars to the symbolTable
   return symbolTable;
 }
 
 void handleLabel(String line) {
   final symbol = "@${extractLabelName(line)}";
-  symbolTable[symbol] = lineNo; //insert symbol regardless
-  final removed = vars.remove(
+  symbolTable[symbol] = lineNo - 1; //insert symbol regardless, we insert with lineNo - 1 because the label is going to get removed
+  vars.remove(
       symbol); //remove from the vars - if it's not there it's not going to do anything
-  print("$symbol removed == $removed");
 }
 
 void handleSymbol(String line) {
-  print("symbolTable.containsKey($line) == ${symbolTable.containsKey(line)}");
-  print("vars.contains($line) == ${vars.contains(line)}");
-
   if (symbolTable.containsKey(line) || vars.contains(line)) {
     return;
   }

@@ -38,10 +38,15 @@ D=M
 String instructions1 = '''
 @R0
 D=M
+@stuff
+M=D
+@fun
 @R1
 D=D-M
 @OUTPUT_FIRST
 D;JGT
+@balls
+M=D
 @R1
 D=M
 @OUTPUT_D
@@ -50,11 +55,27 @@ D=M
 @R0
 D=M
 (OUTPUT_D)
+@balls
+D=M
+(fun)
 @R2
 M=D
 (INFINITE_LOOP)
 @INFINITE_LOOP
 0;JMP''';
+
+List<String> finalResult = [
+  "@0", //@RO
+  "D=M",
+  "@16", //@stuff
+  "M=D",
+  "@18", // @fun @18 since 3 labels before that will be removed
+  "@1",
+  "D=D-M",
+  "@14", // (OUTPUT_FIRST) @14 since no labels come before it
+  "D;JGT",
+  "@17", //@balls
+];
 
 void main() {
   group("description", () {
@@ -74,7 +95,7 @@ void main() {
       vars = null;
     });
 
-    test('extract label name', () {
+    /* test('extract label name', () {
       expect(extractLabelName("(OUTPUT_FIRST)"), "OUTPUT_FIRST");
     });
 
@@ -197,11 +218,19 @@ void main() {
         'build symbol table with longer instructions but no variables',
             () {
           final result = buildSymbolTable(instructions1);
+          expect(vars[0], "@stuff");
+          expect(vars[1], "@balls");
+          expect(result["@OUTPUT_FIRST"], 15);
+          expect(result["@OUTPUT_D"], 18);
+          expect(result["@ass"], 21);
+          expect(result["@INFINITE_LOOP"], 24);
+          expect(result["@stuff"], 16);
+          expect(result["@balls"], 17);
+            });*/
+    test('build symbol table with longer instructions but no variables', () {
+      final List<String> result = buildAssemblyWithoutSymbols(instructions1);
 
-          //vars aren't touched since there are no vars
-          expect(vars.length, 0);
-
-          expect(result["@OUTPUT_FIRST"], 10);
-        });
+      finalResult.asMap().forEach((index, value) => value == result[index]);
+    });
   });
 }

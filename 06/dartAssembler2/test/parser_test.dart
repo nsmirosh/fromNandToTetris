@@ -11,7 +11,7 @@ void main() {
     // var actualParser = Parser(mockMyBalls);
 
     // when(parser.proccessAInstr("balls")).thenReturn("001");
-    actualParser.convertToAssembly("@1111");
+    actualParser.assemblyToBinary("@1111");
     // expect(parser.proccessAInstr("balls"), "001");
     // verify(actualParser.proccessAInstr("@1111"));
 

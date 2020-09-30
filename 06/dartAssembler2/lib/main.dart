@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:dartAssembler2/parser.dart';
 import 'package:dartAssembler2/symbol_table_builder.dart';
 
-
 var lineNo = 0;
 
 main() {
@@ -14,33 +13,38 @@ main() {
 
   String wholeFileNoCommentsOrWhitespace = "";
 
-  inputStream
-      .transform(utf8.decoder)
-      .transform(LineSplitter())
-      .listen((String line) {
+  List<String> assemblyWithoutSymbols;
+
+  inputStream.transform(utf8.decoder).transform(LineSplitter()).listen(
+      (String line) {
     String pureText = removeCommentsAndWhiteSpace(line);
     if (pureText != null) {
       wholeFileNoCommentsOrWhitespace += "$pureText\n";
     }
   }, onDone: () {
     print(wholeFileNoCommentsOrWhitespace);
-    buildSymbolTable(wholeFileNoCommentsOrWhitespace);
-    print('File is now closed.');
+    assemblyWithoutSymbols =
+        buildAssemblyWithoutSymbols(wholeFileNoCommentsOrWhitespace);
+    print('symbolTable = $symbolTable');
 
+    final fileToWriteTo = File('MachineLanguage.hack').openWrite();
+
+    assemblyWithoutSymbols.forEach((line) {
+      fileToWriteTo.write("${assemblyToBinary(line)}\n");
+    });
+    fileToWriteTo.close();
   }, onError: (e) {
     print(e.toString());
   });
+}
 
+String removeLabels(String wholeFile) {
+  LineSplitter ls = LineSplitter();
+  List<String> lines = ls.convert(wholeFile);
 
-
-
-
-  // parser.convertToAssembly(pureInstruction) + "\n"
-
-
-  final fileToWriteTo = File('MachineLanguage.hack').openWrite();
-  final parser = Parser();
-
+  lines.forEach((line) {
+    if (isLabel(line)) return;
+  });
 }
 
 String removeCommentsAndWhiteSpace(String line) {
@@ -61,4 +65,3 @@ String removeCommentsAndWhiteSpace(String line) {
   }
   return line.trim();
 }
-

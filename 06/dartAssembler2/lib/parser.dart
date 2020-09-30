@@ -1,31 +1,13 @@
 // Real class
 import 'c_instruction_constants.dart';
 
-
 const wordWidthInBits = 16;
 
-class Parser {
-
-  String convertToAssembly(String line) {
-    /*
-  Perform two passes, the first one is going to:
-  1. Strip everything to leave only the instructions and the symbols
-  2. put the "unknown" symbols into the symbol table along with their value
-  3. delete the "unknown" symbol table references from the code
-
-  second one:
-  1. Translate the symbol/comment/whitespace-free code into binary (basically what it's doing right now
-
-
-   */
-
-    if (isAinstr(line)) {
-      return proccessAInstr(line);
-    }
-    return processCInstr(line);
+String assemblyToBinary(String line) {
+  if (isAinstr(line)) {
+    return proccessAInstr(line);
   }
-
-
+  return processCInstr(line);
 }
 
 bool isAinstr(line) => line[0] == "@";
@@ -81,4 +63,3 @@ getJumpBits(String line) {
   var jumpInstruction = line.substring(line.indexOf(';') + 1);
   return jmpInstructionMap[jumpInstruction];
 }
-
