@@ -1,6 +1,4 @@
-// Real class
 import 'c_instruction_constants.dart';
-
 const wordWidthInBits = 16;
 
 String assemblyToBinary(String line) {

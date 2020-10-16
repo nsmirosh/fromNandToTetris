@@ -71,8 +71,8 @@ List<String> buildAssemblyWithoutSymbols(String wholeFile) {
   return assemblyWithoutSymbols;
 }
 
-Map<String, int> buildSymbolTable(List<String> lines) {
-  lines.forEach((line) {
+Map<String, int> buildSymbolTable(List<String> wholeFile) {
+  wholeFile.forEach((line) {
     if (isLabel(line))
       handleLabel(line);
     else if (isSymbol(line)) handleSymbol(line);
@@ -103,4 +103,11 @@ bool isSymbol(line) => line[0] == "@";
 
 extractLabelName(String label) {
   return label.substring(1, label.length - 1);
+}
+
+
+printSymbolTable() {
+  symbolTable.keys.forEach((key) {
+    print('$key = ${symbolTable[key]}');
+  });
 }

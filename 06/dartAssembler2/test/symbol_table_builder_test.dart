@@ -37,7 +37,6 @@ D=M
 (OUTPUT_FIRST)
   ''';
 
-
 String MaxAsm = '''
 @R0
 D=M
@@ -59,7 +58,6 @@ M=D
 @INFINITE_LOOP
 0;JMP''';
 
-
 String MaxAsmWithoutSymbols = '''
 @0
 D=M
@@ -78,7 +76,132 @@ M=D
 @14
 0;JMP''';
 
-String instructions1 = '''
+
+
+void main() {
+  group("description", () {
+    setUp(() async {
+      print("setUp");
+      lineNo = 0;
+      vars = [];
+      nextFreeRAMPos = 16;
+      symbolTable = Map();
+      symbolTable.addAll(testSymbolTable);
+    });
+
+    tearDown(() async {
+      print("tearDown");
+      symbolTable = null;
+      lineNo = 0;
+      vars = null;
+    });
+    test('extract label name', () {
+      expect(extractLabelName("(OUTPUT_FIRST)"), "OUTPUT_FIRST");
+    });
+
+    test('isLabel works OK', () {
+      expect(isLabel("(OUTPUT_FIRST)"), true);
+      expect(isLabel("D=M"), false);
+      expect(isLabel("@OUTPUT_D"), false);
+      expect(isLabel("0;JMP"), false);
+    });
+
+    test('isSymbol works OK', () {
+      expect(isSymbol("(OUTPUT_FIRST)"), false);
+      expect(isSymbol("D=M"), false);
+      expect(isSymbol("@OUTPUT_D"), true);
+      expect(isSymbol("0;JMP"), false);
+    });
+
+    test('handleLabel inserts into symbolTable correctly with no Label in vars',
+        () {
+      vars = ["@someVar", "@someBalls"];
+      lineNo = 5;
+      handleLabel("(OUTPUT_FIRST)");
+      expect(symbolTable["@OUTPUT_FIRST"], 4);
+    });
+
+    test('handleLabel removes from vars a lable that should not be there', () {
+      vars = ["@someVar", "@someBalls", "@OUTPUT_FIRST", "@someBalls2"];
+      lineNo = 5;
+      handleLabel("(OUTPUT_FIRST)");
+      expect(symbolTable["@OUTPUT_FIRST"], 4);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@someBalls2");
+    });
+
+    test(
+        'handleSymbol does not add anything to the symbols or vars if the symbol is already in the vars ',
+        () {
+      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+      expect(symbolTable.length, 23);
+      handleSymbol("@out");
+      expect(symbolTable.length, 23);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@out");
+      expect(vars[3], "@someBalls2");
+    });
+
+    test(
+        'handleSymbol does not do anything if the symbol is already in the symbol table ',
+        () {
+      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+      expect(symbolTable.length, 23);
+      symbolTable["@OUTPUT_FIRST"] = 10;
+      expect(symbolTable.length, 24);
+      handleSymbol("@OUTPUT_FIRST");
+      expect(symbolTable.length, 24);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@out");
+      expect(vars[3], "@someBalls2");
+    });
+
+    test(
+        'handleSymbol does not do anything if the symbol is already in the symbol table ',
+        () {
+      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+      expect(symbolTable.length, 23);
+      symbolTable["@OUTPUT_FIRST"] = 10;
+      expect(symbolTable.length, 24);
+      handleSymbol("@OUTPUT_FIRST");
+      expect(symbolTable.length, 24);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@out");
+      expect(vars[3], "@someBalls2");
+    });
+
+    test(
+        'handleSymbol adds to the vars if the symbol is not in the vars and not in the symboltable ',
+        () {
+      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+      expect(symbolTable.length, 23);
+      handleSymbol("@someBalls3");
+      expect(symbolTable.length, 23);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@out");
+      expect(vars[3], "@someBalls2");
+      expect(vars[4], "@someBalls3");
+    });
+
+    test(
+        'handleSymbol does not to the var a var that is already in the symbol table ',
+        () {
+      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+      expect(symbolTable.length, 23);
+      handleSymbol("@R0");
+      expect(symbolTable.length, 23);
+      expect(vars[0], "@someVar");
+      expect(vars[1], "@someBalls");
+      expect(vars[2], "@out");
+      expect(vars[3], "@someBalls2");
+    });
+
+/*    String instructionListOne = '''
 @R0
 D=M
 @stuff
@@ -107,172 +230,26 @@ M=D
 @INFINITE_LOOP
 0;JMP''';
 
-List<String> finalResult = [
-  "@0", //@RO
-  "D=M",
-  "@16", //@stuff
-  "M=D",
-  "@18", // @fun @18 since 3 labels before that will be removed
-  "@1",
-  "D=D-M",
-  "@14", // (OUTPUT_FIRST) @14 since no labels come before it
-  "D;JGT",
-  "@17", //@balls
-];
+    List<String> finalResultOne = [
+      "@0", //@RO
+      "D=M",
+      "@16", //@stuff
+      "M=D",
+      "@18", // @fun @18 since 3 labels before that will be removed
+      "@1",
+      "D=D-M",
+      "@14", // (OUTPUT_FIRST) @14 since no labels come before it
+      "D;JGT",
+      "@17", //@balls
+    ];
 
-void main() {
-  group("description", () {
-    setUp(() async {
-      print("setUp");
-      lineNo = 0;
-      vars = [];
-      nextFreeRAMPos = 16;
-      symbolTable = Map();
-      symbolTable.addAll(testSymbolTable);
+    test('whole file convert test with instructionListOne', () {
+      final List<String> assemblyWithoutSymbols =
+          buildAssemblyWithoutSymbols(instructionListOne);
+
+      finalResultOne.asMap().forEach((index, line) =>
+          expect(assemblyWithoutSymbols[index].trim(), line));
     });
-
-    tearDown(() async {
-      print("tearDown");
-      symbolTable = null;
-      lineNo = 0;
-      vars = null;
-    });
-    test('extract label name', () {
-      expect(extractLabelName("(OUTPUT_FIRST)"), "OUTPUT_FIRST");
-    });
-
-    /* test('build symbol table inserts a single label at position 4', () {
-      expect(buildSymbolTable(instructions)["@OUTPUT_FIRST"], 4);
-    });
-
-    test(
-        'build symbol table inserts a single label at position 4, removes it from a list of variable',
-        () {
-      vars = ["@OUTPUT_FIRST", "@someVar"];
-      buildSymbolTable(instructions);
-      expect(vars.length, 2);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@OUTPUT_D");
-    });*/
-
-    test('isLabel works OK', () {
-      expect(isLabel("(OUTPUT_FIRST)"), true);
-      expect(isLabel("D=M"), false);
-      expect(isLabel("@OUTPUT_D"), false);
-      expect(isLabel("0;JMP"), false);
-    });
-
-    test('isSymbol works OK', () {
-      expect(isSymbol("(OUTPUT_FIRST)"), false);
-      expect(isSymbol("D=M"), false);
-      expect(isSymbol("@OUTPUT_D"), true);
-      expect(isSymbol("0;JMP"), false);
-    });
-
-    test('handleLabel inserts into symbolTable correctly with no Label in vars',
-            () {
-          vars = ["@someVar", "@someBalls"];
-          lineNo = 5;
-          handleLabel("(OUTPUT_FIRST)");
-          expect(symbolTable["@OUTPUT_FIRST"], 5);
-        });
-
-    test('handleLabel removes from vars a lable that should not be there', () {
-      vars = ["@someVar", "@someBalls", "@OUTPUT_FIRST", "@someBalls2"];
-      lineNo = 5;
-      handleLabel("(OUTPUT_FIRST)");
-      expect(symbolTable["@OUTPUT_FIRST"], 5);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@someBalls2");
-    });
-
-    test(
-        'handleSymbol does not add anything to the symbols or vars if the symbol is already in the vars ', () {
-      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
-      expect(symbolTable.length, 23);
-      handleSymbol("@out");
-      expect(symbolTable.length, 23);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@out");
-      expect(vars[3], "@someBalls2");
-    });
-
-    test(
-        'handleSymbol does not do anything if the symbol is already in the symbol table ', () {
-      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
-      expect(symbolTable.length, 23);
-      symbolTable["@OUTPUT_FIRST"] = 10;
-      expect(symbolTable.length, 24);
-      handleSymbol("@OUTPUT_FIRST");
-      expect(symbolTable.length, 24);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@out");
-      expect(vars[3], "@someBalls2");
-    });
-
-    test(
-        'handleSymbol does not do anything if the symbol is already in the symbol table ', () {
-      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
-      expect(symbolTable.length, 23);
-      symbolTable["@OUTPUT_FIRST"] = 10;
-      expect(symbolTable.length, 24);
-      handleSymbol("@OUTPUT_FIRST");
-      expect(symbolTable.length, 24);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@out");
-      expect(vars[3], "@someBalls2");
-    });
-
-    test(
-        'handleSymbol adds to the vars if the symbol is not in the vars and not in the symboltable ', () {
-      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
-      expect(symbolTable.length, 23);
-      handleSymbol("@someBalls3");
-      expect(symbolTable.length, 23);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@out");
-      expect(vars[3], "@someBalls2");
-      expect(vars[4], "@someBalls3");
-    });
-
-
-    test(
-        'handleSymbol does not to the var a var that is already in the symbol table ', () {
-      vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
-      expect(symbolTable.length, 23);
-      handleSymbol("@R0");
-      expect(symbolTable.length, 23);
-      expect(vars[0], "@someVar");
-      expect(vars[1], "@someBalls");
-      expect(vars[2], "@out");
-      expect(vars[3], "@someBalls2");
-    });
-
-    /*  test(
-        'build symbol table with longer instructions but no variables',
-            () {
-          final result = buildSymbolTable(instructions1);
-          expect(vars[0], "@stuff");
-          expect(vars[1], "@balls");
-          expect(result["@OUTPUT_FIRST"], 15);
-          expect(result["@OUTPUT_D"], 18);
-          expect(result["@ass"], 21);
-          expect(result["@INFINITE_LOOP"], 24);
-          expect(result["@stuff"], 16);
-          expect(result["@balls"], 17);
-            });*/
-    test('build symbol table with longer instructions but no variables', () {
-      final List<String> result = buildAssemblyWithoutSymbols(instructions1);
-
-      finalResult.asMap().forEach((index, value) =>
-          expect(value, result[index]));
-    });
-
 
     test('compare maxAsm with ', () {
       final List<String> result = buildAssemblyWithoutSymbols(MaxAsm);
@@ -280,8 +257,9 @@ void main() {
       LineSplitter ls = LineSplitter();
       List<String> maxAsmWithoutSymbols = ls.convert(MaxAsmWithoutSymbols);
 
-      result.asMap().forEach((index, line) =>
-          expect(line, maxAsmWithoutSymbols[index]));
-    });
+      result
+          .asMap()
+          .forEach((index, line) => expect(maxAsmWithoutSymbols[index], line));
+    });*/
   });
 }

@@ -9,33 +9,36 @@ var lineNo = 0;
 main() {
   final assemblyWithSymbols = new File('AssemblyWithSymbols.asm');
   Stream<List<int>> inputStream = assemblyWithSymbols.openRead();
-  final pureAssembly = File('PureAssembly.asm').openWrite();
-
   String wholeFileNoCommentsOrWhitespace = "";
 
+  inputStream.transform(utf8.decoder).transform(LineSplitter()).listen(
+    (String line) {
+      String pureText = removeCommentsAndWhiteSpace(line);
+      if (pureText != null) {
+        wholeFileNoCommentsOrWhitespace += "$pureText\n";
+      }
+    },
+    onDone: () => _convertToMachineLanguage(wholeFileNoCommentsOrWhitespace),
+    onError: (e) => print(e.toString()),
+  );
+}
+
+_convertToMachineLanguage(String wholeFileNoCommentsOrWhitespace) {
   List<String> assemblyWithoutSymbols;
 
-  inputStream.transform(utf8.decoder).transform(LineSplitter()).listen(
-      (String line) {
-    String pureText = removeCommentsAndWhiteSpace(line);
-    if (pureText != null) {
-      wholeFileNoCommentsOrWhitespace += "$pureText\n";
-    }
-  }, onDone: () {
-    print(wholeFileNoCommentsOrWhitespace);
-    assemblyWithoutSymbols =
-        buildAssemblyWithoutSymbols(wholeFileNoCommentsOrWhitespace);
-    print('symbolTable = $symbolTable');
+  print(wholeFileNoCommentsOrWhitespace);
+  assemblyWithoutSymbols =
+      buildAssemblyWithoutSymbols(wholeFileNoCommentsOrWhitespace);
 
-    final fileToWriteTo = File('MachineLanguage.hack').openWrite();
+  print(assemblyWithoutSymbols);
 
-    assemblyWithoutSymbols.forEach((line) {
-      fileToWriteTo.write("${assemblyToBinary(line)}\n");
-    });
-    fileToWriteTo.close();
-  }, onError: (e) {
-    print(e.toString());
-  });
+  printSymbolTable();
+
+  final machineLanguageFile = File('MachineLanguage.hack').openWrite();
+
+  assemblyWithoutSymbols
+      .forEach((line) => machineLanguageFile.write("${assemblyToBinary(line)}\n"));
+  machineLanguageFile.close();
 }
 
 String removeLabels(String wholeFile) {
