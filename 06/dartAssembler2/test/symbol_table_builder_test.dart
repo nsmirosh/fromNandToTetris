@@ -201,6 +201,14 @@ void main() {
       expect(vars[3], "@someBalls2");
     });
 
+    test(
+        'buildSymbolTable build symbol table correctly ',
+            () {
+          vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
+          expect(symbolTable.length, 23);
+
+        });
+
 /*    String instructionListOne = '''
 @R0
 D=M
