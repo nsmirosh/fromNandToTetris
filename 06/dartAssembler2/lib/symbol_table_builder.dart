@@ -23,7 +23,7 @@ import 'dart:convert';
 
 var nextFreeRAMPos = 16;
 var vars = [];
-int lineNo = 0;
+int lineNo = 1;
 
 Map<String, int> symbolTable = {
   "@SP": 0,

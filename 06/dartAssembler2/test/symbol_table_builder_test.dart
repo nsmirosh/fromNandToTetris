@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartAssembler2/symbol_table_builder.dart';
 import 'package:test/test.dart';
 
@@ -34,6 +36,47 @@ D=M
 0;JMP
 (OUTPUT_FIRST)
   ''';
+
+
+String MaxAsm = '''
+@R0
+D=M
+@R1
+D=D-M
+@OUTPUT_FIRST
+D;JGT
+@R1
+D=M
+@OUTPUT_D
+0;JMP
+(OUTPUT_FIRST)
+@R0
+D=M
+(OUTPUT_D)
+@R2
+M=D
+(INFINITE_LOOP)
+@INFINITE_LOOP
+0;JMP''';
+
+
+String MaxAsmWithoutSymbols = '''
+@0
+D=M
+@1
+D=D-M
+@10
+D;JGT
+@1
+D=M
+@12
+0;JMP
+@R0
+D=M
+@2
+M=D
+@14
+0;JMP''';
 
 String instructions1 = '''
 @R0
@@ -94,12 +137,11 @@ void main() {
       lineNo = 0;
       vars = null;
     });
-
-    /* test('extract label name', () {
+    test('extract label name', () {
       expect(extractLabelName("(OUTPUT_FIRST)"), "OUTPUT_FIRST");
     });
 
-    test('build symbol table inserts a single label at position 4', () {
+    /* test('build symbol table inserts a single label at position 4', () {
       expect(buildSymbolTable(instructions)["@OUTPUT_FIRST"], 4);
     });
 
@@ -111,7 +153,7 @@ void main() {
       expect(vars.length, 2);
       expect(vars[0], "@someVar");
       expect(vars[1], "@OUTPUT_D");
-    });
+    });*/
 
     test('isLabel works OK', () {
       expect(isLabel("(OUTPUT_FIRST)"), true);
@@ -128,12 +170,12 @@ void main() {
     });
 
     test('handleLabel inserts into symbolTable correctly with no Label in vars',
-        () {
-      vars = ["@someVar", "@someBalls"];
-      lineNo = 5;
-      handleLabel("(OUTPUT_FIRST)");
-      expect(symbolTable["@OUTPUT_FIRST"], 5);
-    });
+            () {
+          vars = ["@someVar", "@someBalls"];
+          lineNo = 5;
+          handleLabel("(OUTPUT_FIRST)");
+          expect(symbolTable["@OUTPUT_FIRST"], 5);
+        });
 
     test('handleLabel removes from vars a lable that should not be there', () {
       vars = ["@someVar", "@someBalls", "@OUTPUT_FIRST", "@someBalls2"];
@@ -145,8 +187,8 @@ void main() {
       expect(vars[2], "@someBalls2");
     });
 
-    test('handleSymbol does not add anything to the symbols or vars if the symbol is already in the vars ', () {
-
+    test(
+        'handleSymbol does not add anything to the symbols or vars if the symbol is already in the vars ', () {
       vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
       expect(symbolTable.length, 23);
       handleSymbol("@out");
@@ -155,11 +197,10 @@ void main() {
       expect(vars[1], "@someBalls");
       expect(vars[2], "@out");
       expect(vars[3], "@someBalls2");
-
     });
 
-    test('handleSymbol does not do anything if the symbol is already in the symbol table ', () {
-
+    test(
+        'handleSymbol does not do anything if the symbol is already in the symbol table ', () {
       vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
       expect(symbolTable.length, 23);
       symbolTable["@OUTPUT_FIRST"] = 10;
@@ -170,11 +211,10 @@ void main() {
       expect(vars[1], "@someBalls");
       expect(vars[2], "@out");
       expect(vars[3], "@someBalls2");
-
     });
 
-    test('handleSymbol does not do anything if the symbol is already in the symbol table ', () {
-
+    test(
+        'handleSymbol does not do anything if the symbol is already in the symbol table ', () {
       vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
       expect(symbolTable.length, 23);
       symbolTable["@OUTPUT_FIRST"] = 10;
@@ -185,11 +225,10 @@ void main() {
       expect(vars[1], "@someBalls");
       expect(vars[2], "@out");
       expect(vars[3], "@someBalls2");
-
     });
 
-    test('handleSymbol adds to the vars if the symbol is not in the vars and not in the symboltable ', () {
-
+    test(
+        'handleSymbol adds to the vars if the symbol is not in the vars and not in the symboltable ', () {
       vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
       expect(symbolTable.length, 23);
       handleSymbol("@someBalls3");
@@ -202,8 +241,8 @@ void main() {
     });
 
 
-    test('handleSymbol does not to the var a var that is already in the symbol table ', () {
-
+    test(
+        'handleSymbol does not to the var a var that is already in the symbol table ', () {
       vars = ["@someVar", "@someBalls", "@out", "@someBalls2"];
       expect(symbolTable.length, 23);
       handleSymbol("@R0");
@@ -214,7 +253,7 @@ void main() {
       expect(vars[3], "@someBalls2");
     });
 
-    test(
+    /*  test(
         'build symbol table with longer instructions but no variables',
             () {
           final result = buildSymbolTable(instructions1);
@@ -230,7 +269,19 @@ void main() {
     test('build symbol table with longer instructions but no variables', () {
       final List<String> result = buildAssemblyWithoutSymbols(instructions1);
 
-      finalResult.asMap().forEach((index, value) => value == result[index]);
+      finalResult.asMap().forEach((index, value) =>
+          expect(value, result[index]));
+    });
+
+
+    test('compare maxAsm with ', () {
+      final List<String> result = buildAssemblyWithoutSymbols(MaxAsm);
+
+      LineSplitter ls = LineSplitter();
+      List<String> maxAsmWithoutSymbols = ls.convert(MaxAsmWithoutSymbols);
+
+      result.asMap().forEach((index, line) =>
+          expect(line, maxAsmWithoutSymbols[index]));
     });
   });
 }

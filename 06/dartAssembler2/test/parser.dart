@@ -4,7 +4,7 @@ import 'package:dartAssembler2/parser.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('check that dest bits are parsed correctly', () {
+ /* test('check that dest bits are parsed correctly', () {
     expect(getDestBits("D=M"), "010");
     expect(getDestBits("AM=D"), "101");
     expect(getDestBits("AMD=1"), "111");
@@ -42,6 +42,6 @@ void main() {
     expect(removeCommentsAndWhiteSpace("            \n"), null);
     expect(removeCommentsAndWhiteSpace("(OUTPUT_FIRST)\n"), "(OUTPUT_FIRST)");
 
-  });
+  });*/
 
 }
